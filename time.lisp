@@ -135,12 +135,12 @@ If nactor-utils:maintain-soft-time is called, change this var to :soft."))
                                               (sleep *soft-time-resolution*))
                                     while %soft-time-enabled-p))
                             :name "SOFT-TIME-MAINTAINER"))
-      (format t "Soft time mainter thread started.~%")
+      (format t "Soft time maintaining thread started.~%")
       t))
   (defun soft-time-enabled-p ()
     %soft-time-enabled-p)
   (defun shutdown-soft-time ()
-    "Destroy soft time maintainer thread and set %soft-time-enabled-p flat to nil."
+    "Destroy soft time maintaining thread and set %soft-time-enabled-p flag to nil."
     (if  %soft-time-enabled-p
          (progn
            (format t "The soft time is shutting down! The thread will be destroyed and the value of soft time will set to zero. You can invoke RESTART-SOFT-TIME if you want to use soft time later.~%")
