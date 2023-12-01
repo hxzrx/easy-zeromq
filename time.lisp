@@ -1,29 +1,29 @@
 (defpackage :soft-universal-time
   (:use :cl)
-  (:nicknames :softime)
+  (:nicknames :soft-time)
   (:export
    :*time-getter*
    :get-time-policy
    :set-time-policy
-   :get-software-time-resolution
-   :set-software-time-resolution
-   :initialize-software-time
-   :shutdown-software-time
-   :restart-software-time
-   :software-time-enabled-p
-   :get-software-time
-   :get-hardware-time))
+   :get-soft-time-resolution
+   :set-soft-time-resolution
+   :initialize-soft-time
+   :shutdown-soft-time
+   :restart-soft-time
+   :soft-time-enabled-p
+   :get-soft-time
+   :get-hard-time))
 
-;; Hardware time is the time which is got from the OS directly,
-;; Software time is the time which is got from a variable and updated periodically from the OS by another thread.
-;; Software time is suitable for such works that time will be fetched very intensively
+;; Hard time is the time which is got from the OS directly,
+;; Soft time is the time which is got from a variable and updated periodically from the OS by another thread.
+;; Soft time is suitable for such works that time will be fetched very intensively
 ;; but not care much about the accuracy.
 ;;
 ;; Use case:
 ;; If a system can tolerate the time error >= 1 millisecond,
-;; the thread will get the time from the OS for 1000 times each second and update the software time variable,
+;; the thread will get the time from the OS for 1000 times each second and update the soft time variable,
 ;; Getting the time from a variable can be about 100 times faster than from the OS,
-;; if the system gets time much more than 1000 times, software time may be a good candidate.
+;; if the system gets time much more than 1000 times, soft time may be a good candidate.
 
 (in-package :soft-universal-time)
 
@@ -41,121 +41,121 @@
   (defconstant +milliseconds-per-second+ 1000)
   (defconstant +unix-epoch+ (encode-universal-time 0 0 0 1 1 1970 0))
 
-  (declaim (single-float *software-time-resolution*))
-  (defparameter *software-time-resolution* 0.005
-    "Interval second for updating the software time variable.
+  (declaim (single-float *soft-time-resolution*))
+  (defparameter *soft-time-resolution* 0.005
+    "Interval second for updating the soft time variable.
 This resolution should be less than the resolution of a timer, if the later is used in the same system.")
 
-  (defparameter *time-policy* :software
-    "Depends on how to get the current time. Can be either :hardware or :software.
-If nactor-utils:maintain-software-time is called, change this var to :software."))
+  (defparameter *time-policy* :soft
+    "Depends on how to get the current time. Can be either :hard or :soft.
+If nactor-utils:maintain-soft-time is called, change this var to :soft."))
 
 
-(defun get-software-time-resolution ()
-  "Get the software time resolution in seconds."
-  *software-time-resolution*)
+(defun get-soft-time-resolution ()
+  "Get the soft time resolution in seconds."
+  *soft-time-resolution*)
 
-(defun set-software-time-resolution (&optional (seconds 0.005))
-  "Set the software time resolution in seconds."
+(defun set-soft-time-resolution (&optional (seconds 0.005))
+  "Set the soft time resolution in seconds."
   (declare (real seconds))
-  (setf *software-time-resolution* (coerce seconds 'single-float)))
+  (setf *soft-time-resolution* (coerce seconds 'single-float)))
 
-(declaim (inline get-software-time))
-(defun get-software-time () ; cost 0.27 seconds for 10^9 times
+(declaim (inline get-soft-time))
+(defun get-soft-time () ; cost 0.27 seconds for 10^9 times
   "Get the universal milliseconds from the glocal variable, ultra fast."
   (declare (optimize (speed 3) (safety 0) (debug 0)))
   (the fixnum **soft-universal-time**))
 
-(declaim (inline set-software-time))
-(defun set-software-time (milliseconds)
+(declaim (inline set-soft-time))
+(defun set-soft-time (milliseconds)
   (declare (optimize (speed 3) (safety 0) (debug 0)))
   (declare (fixnum milliseconds))
   (setf **soft-universal-time** milliseconds))
 
-(declaim (inline get-hardware-time))
-(defun get-hardware-time () ; cost 18 seconds for 10^9 times
-  "Get the universal time from the OS, in millisecond, will not set the software time var."
+(declaim (inline get-hard-time))
+(defun get-hard-time () ; cost 18 seconds for 10^9 times
+  "Get the universal time from the OS, in millisecond, will not set the soft time var."
   (declare (optimize (speed 3) (safety 0) (debug 0)))
   (multiple-value-bind (sec nsec) (local-time::%get-current-time)
     (the fixnum (+ (the fixnum (* (+ (the fixnum sec) #.+unix-epoch+)
                                   #.+milliseconds-per-second+))
                    (truncate (/ (the fixnum nsec) 1000000))))))
 
-(declaim (inline get-hardware-time*))
-(defun get-hardware-time* ()
-  "Get and return the universal time (in millisecond) from the OS and set the software time var."
+(declaim (inline get-hard-time*))
+(defun get-hard-time* ()
+  "Get and return the universal time (in millisecond) from the OS and set the soft time var."
   (declare (optimize (speed 3) (safety 0) (debug 0)))
   (multiple-value-bind (sec nsec) (local-time::%get-current-time)
     (let ((now (the fixnum (+ (the fixnum (* (+ (the fixnum sec) #.+unix-epoch+)
                                              #.+milliseconds-per-second+))
                               (truncate (/ (the fixnum nsec) 1000000))))))
-      (set-software-time now))))
+      (set-soft-time now))))
 
-(declaim (inline update-software-time))
-(defun update-software-time ()
+(declaim (inline update-soft-time))
+(defun update-soft-time ()
   (declare (optimize (speed 3) (safety 0) (debug 0)))
-  (get-hardware-time*))
+  (get-hard-time*))
 
 (defparameter *time-getter*
-  (cond ((eq :hardware *time-policy*)
-         #'get-hardware-time)
-        ((eq :software *time-policy*)
-         #'get-software-time)
-        (t #'get-hardware-time))
+  (cond ((eq :hard *time-policy*)
+         #'get-hard-time)
+        ((eq :soft *time-policy*)
+         #'get-soft-time)
+        (t #'get-hard-time))
   "Funcall this function object to get the current time according to the current time policy.")
 
 (defun get-time-policy ()
-  "Get the current time policy, return :software or :hardware."
+  "Get the current time policy, return :soft or :hard."
   *time-policy*)
 
-(defun set-time-policy (&optional (policy :software))
-  "Set time policy, should be :software or :hardware."
-  (if (or (eq policy :software) (eq policy :hardware))
+(defun set-time-policy (&optional (policy :soft))
+  "Set time policy, should be :soft or :hard."
+  (if (or (eq policy :soft) (eq policy :hard))
       (prog1 (setf *time-policy* policy)
         (setf *time-getter*
-              (cond ((eq :hardware *time-policy*)
-                     #'get-hardware-time)
-                    ((eq :software *time-policy*)
-                     #'get-software-time)
-                    (t #'get-hardware-time))))
-      (error "Failed to set time policy, ~d is not valid, should be :software or :hardware." policy)))
+              (cond ((eq :hard *time-policy*)
+                     #'get-hard-time)
+                    ((eq :soft *time-policy*)
+                     #'get-soft-time)
+                    (t #'get-hard-time))))
+      (error "Failed to set time policy, ~d is not valid, should be :soft or :hard." policy)))
 
 
-(defvar *software-time-maintainer* nil
-  "A thread which update software time periodically if *time-policy* is :software.")
+(defvar *soft-time-maintainer* nil
+  "A thread which update soft time periodically if *time-policy* is :soft.")
 
-(let ((%software-time-enabled-p nil))
-  (defun maintain-software-time ()
+(let ((%soft-time-enabled-p nil))
+  (defun maintain-soft-time ()
     (declare (optimize (speed 3) (safety 0) (debug 0)))
-    (unless %software-time-enabled-p
-      (setf %software-time-enabled-p t)
-      (setf *software-time-maintainer*
+    (unless %soft-time-enabled-p
+      (setf %soft-time-enabled-p t)
+      (setf *soft-time-maintainer*
             (bt:make-thread (lambda ()
-                              (loop do (progn (update-software-time)
-                                              (sleep *software-time-resolution*))
-                                    while %software-time-enabled-p))
-                            :name "SOFTWARE-TIME-MAINTAINER"))
-      (format t "Software time mainter thread started.~%")
+                              (loop do (progn (update-soft-time)
+                                              (sleep *soft-time-resolution*))
+                                    while %soft-time-enabled-p))
+                            :name "SOFT-TIME-MAINTAINER"))
+      (format t "Soft time mainter thread started.~%")
       t))
-  (defun software-time-enabled-p ()
-    %software-time-enabled-p)
-  (defun shutdown-software-time ()
-    "Destroy software time maintainer thread and set %software-time-enabled-p flat to nil."
-    (if  %software-time-enabled-p
+  (defun soft-time-enabled-p ()
+    %soft-time-enabled-p)
+  (defun shutdown-soft-time ()
+    "Destroy soft time maintainer thread and set %soft-time-enabled-p flat to nil."
+    (if  %soft-time-enabled-p
          (progn
-           (format t "The software time is shutting down! The thread will be destroyed and the value of software time will set to zero. You can invoke RESTART-SOFTWARE-TIME if you want to use software time later.~%")
-           ;;(bt:destroy-thread *software-time-maintainer*)
-           (setf %software-time-enabled-p nil)
-           (when (> *software-time-resolution* 1)
-             (format t "Pleast wait less than ~d seconds to shutdown software time maintainer.~%" *software-time-resolution*))
-           (bt:join-thread *software-time-maintainer*)
-           (setf *software-time-maintainer* nil
+           (format t "The soft time is shutting down! The thread will be destroyed and the value of soft time will set to zero. You can invoke RESTART-SOFT-TIME if you want to use soft time later.~%")
+           ;;(bt:destroy-thread *soft-time-maintainer*)
+           (setf %soft-time-enabled-p nil)
+           (when (> *soft-time-resolution* 1)
+             (format t "Pleast wait less than ~d seconds to shutdown soft time maintainer.~%" *soft-time-resolution*))
+           (bt:join-thread *soft-time-maintainer*)
+           (setf *soft-time-maintainer* nil
                  **soft-universal-time** 0))
-         (format t "The software time is not enabled!~%")))
-  (defun initialize-software-time ()
-    "Make a thread to update the software time."
-    (maintain-software-time))
-  (defun restart-software-time ()
-    (format t "The software time is going to restart!~%")
-    (ignore-errors (shutdown-software-time))
-    (maintain-software-time)))
+         (format t "The soft time is not enabled!~%")))
+  (defun initialize-soft-time ()
+    "Make a thread to update the soft time."
+    (maintain-soft-time))
+  (defun restart-soft-time ()
+    (format t "The soft time is going to restart!~%")
+    (ignore-errors (shutdown-soft-time))
+    (maintain-soft-time)))

@@ -6,33 +6,33 @@ This is used for very intensively time getting with not very high accuracy.
 
 The usage is very simple:
 
- 1. `set-software-time-resolution`, defines the updating resolution, which is default by 0.005 second.
- 2. `initialize-software-time`, run the background thread to update the time.
- 3. Call `*time-getter*` to get the result, in milliseconds. Here, `*time-getter*` is an function object, which is set to the real software time getter or hardware time getter, according to the time policy.
+ 1. `set-soft-time-resolution`, defines the updating resolution, which is default by 0.005 second.
+ 2. `initialize-soft-time`, run the background thread to update the time.
+ 3. Call `*time-getter*` to get the result, in milliseconds. Here, `*time-getter*` is an function object, which is set to the real soft time getter or hard time getter, according to the time policy.
 
-If you only want to get the OS time, just call `get-hardware-time` without the steps above.
+If you only want to get the OS time, just call `get-hard-time` without the steps above.
 
 ## API
 
 ```commonlisp
 ;; simple usage
-(set-software-time-resolution 0.01)
-(initialize-software-time)
+(set-soft-time-resolution 0.01)
+(initialize-soft-time)
 (funcall *time-getter*) ; get universal time in milliseconds
 
-;; get an set time policy, can be either :software or :hardware, default :software
+;; get an set time policy, can be either :soft or :hard, default :soft
 (get-time-policy)
-(set-time-policy :hardware)
+(set-time-policy :hard)
 
 ;; time resolution, in seconds, should be greater than 0
-(get-software-time-resolution)
-(set-software-time-resolution 0.1)
+(get-soft-time-resolution)
+(set-soft-time-resolution 0.1)
 
-(shutdown-software-time)
-(restart-software-time)
-(software-time-enabled-p) ; if updating thread started
+(shutdown-soft-time)
+(restart-soft-time)
+(soft-time-enabled-p) ; if updating thread started
 
 ;; get time directly
-(get-software-time)
-(get-hardware-time)
+(get-soft-time)
+(get-hard-time)
 ```
