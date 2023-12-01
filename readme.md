@@ -20,8 +20,8 @@ If you only want to get the OS time, just call `get-hardware-time` without the s
 (initialize-software-time)
 (funcall *time-getter*) ; get universal time in milliseconds
 
-;; get an set time policy, can be either :software or :hardware
-(get-time-policy) 
+;; get an set time policy, can be either :software or :hardware, default :software
+(get-time-policy)
 (set-time-policy :hardware)
 
 ;; time resolution, in seconds, should be greater than 0
@@ -36,4 +36,3 @@ If you only want to get the OS time, just call `get-hardware-time` without the s
 (get-software-time)
 (get-hardware-time)
 ```
-
