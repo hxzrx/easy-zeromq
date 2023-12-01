@@ -113,7 +113,7 @@
       (sleep resolution) ;; sleep so that it will not get the same hardware time
       (isnt = (soft-universal-time::get-hardware-time) (soft-universal-time::get-software-time)))))
 
-(define-test maintain-software-time :parent softime
+(define-test maintain-software-time-0 :parent softime
   (let ((resolution 0.1))
     (finish (soft-universal-time::set-software-time-resolution resolution)) ; set to a small number
     (finish (soft-universal-time::set-time-policy :software))
@@ -129,3 +129,25 @@
       (is eq thread soft-universal-time::*software-time-maintainer*)
       (soft-universal-time::restart-software-time)
       (isnt eq thread soft-universal-time::*software-time-maintainer*))))
+
+(define-test maintain-software-time-1 :parent softime
+  (alexandria:if-let (thread (find-if (lambda (th) (equal (bt:thread-name th) "SOFTWARE-TIME-MAINTAINER")) (bt:all-threads)))
+    (progn (is eq nil (soft-universal-time::maintain-software-time))
+           (of-type bt:thread thread))
+    (progn (is eq t (soft-universal-time::maintain-software-time))
+           (of-type bt:thread (find-if (lambda (th) (equal (bt:thread-name th) "SOFTWARE-TIME-MAINTAINER")) (bt:all-threads)))))
+  (of-type bt:thread soft-universal-time::*software-time-maintainer*)
+  (is eq t (soft-universal-time::software-time-enabled-p))
+  (is eq nil (soft-universal-time::maintain-software-time))
+
+  (is eq nil (soft-universal-time::maintain-software-time))
+
+  (finish (soft-universal-time::shutdown-software-time))
+  (is eq nil (soft-universal-time::software-time-enabled-p))
+  (is eq nil soft-universal-time::*software-time-maintainer*)
+  (is = 0 soft-universal-time::**soft-universal-time**)
+
+  (finish (soft-universal-time::restart-software-time))
+  (is eq t (soft-universal-time::software-time-enabled-p))
+  (of-type bt:thread soft-universal-time::*software-time-maintainer*)
+  (true (> soft-universal-time::**soft-universal-time** 0)))
