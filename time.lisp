@@ -124,38 +124,44 @@ If nactor-utils:maintain-soft-time is called, change this var to :soft."))
 (defvar *soft-time-maintainer* nil
   "A thread which update soft time periodically if *time-policy* is :soft.")
 
-(let ((%soft-time-enabled-p nil))
-  (defun maintain-soft-time ()
-    (declare (optimize (speed 3) (safety 0) (debug 0)))
-    (unless %soft-time-enabled-p
-      (setf %soft-time-enabled-p t)
-      (setf *soft-time-maintainer*
-            (bt:make-thread (lambda ()
-                              (loop do (progn (update-soft-time)
-                                              (sleep *soft-time-resolution*))
-                                    while %soft-time-enabled-p))
-                            :name "SOFT-TIME-MAINTAINER"))
-      (format t "Soft time maintaining thread started.~%")
-      t))
-  (defun soft-time-enabled-p ()
-    %soft-time-enabled-p)
-  (defun shutdown-soft-time ()
-    "Destroy soft time maintaining thread and set %soft-time-enabled-p flag to nil."
-    (if  %soft-time-enabled-p
-         (progn
-           (format t "The soft time is shutting down! The thread will be destroyed and the value of soft time will set to zero. You can invoke RESTART-SOFT-TIME if you want to use soft time later.~%")
-           ;;(bt:destroy-thread *soft-time-maintainer*)
-           (setf %soft-time-enabled-p nil)
-           (when (> *soft-time-resolution* 1)
-             (format t "Pleast wait less than ~d seconds to shutdown soft time maintainer.~%" *soft-time-resolution*))
-           (bt:join-thread *soft-time-maintainer*)
-           (setf *soft-time-maintainer* nil
-                 **soft-universal-time** 0))
-         (format t "The soft time is not enabled!~%")))
-  (defun initialize-soft-time ()
-    "Make a thread to update the soft time."
-    (maintain-soft-time))
-  (defun restart-soft-time ()
-    (format t "The soft time is going to restart!~%")
-    (ignore-errors (shutdown-soft-time))
-    (maintain-soft-time)))
+(defvar %soft-time-enabled-p% nil
+  "A flag variable shows if soft time is enabled.")
+
+(defun maintain-soft-time ()
+  (declare (optimize (speed 3) (safety 0) (debug 0)))
+  (unless %soft-time-enabled-p%
+    (setf %soft-time-enabled-p% t)
+    (setf *soft-time-maintainer*
+          (bt:make-thread (lambda ()
+                            (loop do (progn (update-soft-time)
+                                            (sleep *soft-time-resolution*))
+                                  while %soft-time-enabled-p%))
+                          :name "SOFT-TIME-MAINTAINER"))
+    (format t "Soft time maintaining thread started.~%")
+    t))
+
+(defun soft-time-enabled-p ()
+  %soft-time-enabled-p%)
+
+(defun shutdown-soft-time ()
+  "Destroy soft time maintaining thread and set %soft-time-enabled-p% flag to nil."
+  (if  %soft-time-enabled-p%
+       (progn
+         (format t "The soft time is shutting down! The thread will be destroyed and the value of soft time will set to zero. You can invoke RESTART-SOFT-TIME if you want to use soft time later.~%")
+         ;;(bt:destroy-thread *soft-time-maintainer*)
+         (setf %soft-time-enabled-p% nil)
+         (when (> *soft-time-resolution* 1)
+           (format t "Pleast wait less than ~d seconds to shutdown soft time maintainer.~%" *soft-time-resolution*))
+         (bt:join-thread *soft-time-maintainer*)
+         (setf *soft-time-maintainer* nil
+               **soft-universal-time** 0))
+       (format t "The soft time is not enabled!~%")))
+
+(defun initialize-soft-time ()
+  "Make a thread to update the soft time."
+  (maintain-soft-time))
+
+(defun restart-soft-time ()
+  (format t "The soft time is going to restart!~%")
+  (ignore-errors (shutdown-soft-time))
+  (maintain-soft-time))
