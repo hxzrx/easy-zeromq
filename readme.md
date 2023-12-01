@@ -12,6 +12,8 @@ The usage is very simple:
 
 If you only want to get the OS time, just call `get-hard-time` without the steps above.
 
+`get-universal-time` runs as fast as `get-soft-time`, however, `get-universal-time` returns time by seconds, while `get-soft-time` returns time by milliseconds.
+
 ## API
 
 ```commonlisp
