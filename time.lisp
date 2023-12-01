@@ -14,6 +14,16 @@
    :get-software-time
    :get-hardware-time))
 
+;; Hardware time is the time which is got from the OS directly,
+;; Software time is the time which is got from a variable and updated periodically from the OS by another thread.
+;; Software time is suitable for such works that time will be fetched very intensively
+;; but not care much about the accuracy.
+;;
+;; Use case:
+;; If a system can tolerate the time error >= 1 millisecond,
+;; the thread will get the time from the OS for 1000 times each second and update the software time variable,
+;; Getting the time from a variable can be about 100 times faster than from the OS,
+;; if the system gets time much more than 1000 times, software time may be a good candidate.
 
 (in-package :soft-universal-time)
 
@@ -39,18 +49,6 @@ This resolution should be less than the resolution of a timer, if the later is u
   (defparameter *time-policy* :software
     "Depends on how to get the current time. Can be either :hardware or :software.
 If nactor-utils:maintain-software-time is called, change this var to :software."))
-
-
-;; Hardware time is the time which is got from the OS directly,
-;; Software time is the time which is got from a variable and updated periodically from the OS by another thread.
-;; Software time is suitable for such works that time will be fetched very intensively
-;; but not care much about the accuracy.
-;;
-;; Use case:
-;; If a system can tolerate the time error >= 1 millisecond,
-;; the thread will get the time from the OS for 1000 times each second and update the software time variable,
-;; Getting the time from a variable can be about 100 times faster than from the OS,
-;; if the system gets time much more than 1000 times, software time may be a good candidate.
 
 
 (defun get-software-time-resolution ()
