@@ -159,9 +159,11 @@ If nactor-utils:maintain-soft-time is called, change this var to :soft."))
 
 (defun initialize-soft-time ()
   "Make a thread to update the soft time."
-  (maintain-soft-time))
+  (if %soft-time-enabled-p%
+      (format t "Soft time maintaining thread is already running!~%")
+      (maintain-soft-time)))
 
 (defun restart-soft-time ()
-  (format t "The soft time is going to restart!~%")
+  (format t "The soft time mainting thread is going to restart!~%")
   (ignore-errors (shutdown-soft-time))
   (maintain-soft-time))
