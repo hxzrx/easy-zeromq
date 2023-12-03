@@ -11,7 +11,12 @@
    :defencoding)
   (:export
    :server-auth-config
+   :server-auth-config-server-secret-key
+   :server-auth-config-server-public-key
    :client-auth-config
+   :client-auth-config-client-secret-key
+   :client-auth-config-client-public-key
+   :client-auth-config-server-public-key
    :make-server-auth
    :make-client-auth
    :gen-server-auth
