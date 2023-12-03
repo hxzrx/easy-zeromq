@@ -1,5 +1,5 @@
 (defsystem "easy-zeromq"
-  :version "1.0.0"
+  :version "1.0.1"
   :description "Wrap of pzmq with patterns ready."
   :author "He Xiang-zhi <xz.he@qq.com>"
   :license "MIT"
@@ -23,7 +23,7 @@
 (defsystem "easy-zeromq/tests"
   :author "He Xiang-zhi <xz.he@qq.com>"
   :license "MIT"
-  :version "1.0.0"
+  :version "1.0.1"
   :serial t
   :depends-on (:easy-zeromq
                :flexi-streams
@@ -32,5 +32,6 @@
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")
+                             (:file "encoding")
                              (:file "zeromq"))))
   :perform (test-op (o s) (uiop:symbol-call :parachute :test :easy-zeromq-tests)))
