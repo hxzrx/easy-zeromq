@@ -26,18 +26,6 @@
 (defparameter *client-wrong-auth-string* (easy-zeromq::gen-client-auth (pzmq:curve-keypair-string) :type :string))
 
 
-(defclass %test-encoding-class ()
-  ((a :initarg :a :initform nil :accessor a)
-   (b :initarg :b :initform nil :accessor b)))
-
-(defstruct (%test-encoding-struct (:constructor make-test-encoding-struct (&key a b)))
-  a b)
-
-(defclass %test-undefenoding () ; this class will not defencoding intentionally
-  ((a :initarg :a :initform nil :accessor a)
-   (b :initarg :b :initform nil :accessor b)))
-
-
 (defun message-handler (lisp-byte-vector)
   "handle a message of byte vector of lisp,
 will make a printing and push this byte vector to a stack."
