@@ -1,10 +1,10 @@
-(defpackage #:soft-universal-time-tests
+(defpackage #:easy-zeromq-tests
   (:use #:cl #:parachute)
   (:export :test
-   :soft-universal-time-tests))
+   :easy-zeromq-tests))
 
 
-(in-package :soft-universal-time-tests)
+(in-package :easy-zeromq-tests)
 
-(define-test soft-universal-time-tests)
-(define-test softime :parent soft-universal-time-tests)
+(define-test easy-zeromq-tests)
+(define-test zeromq :parent easy-zeromq-tests)
