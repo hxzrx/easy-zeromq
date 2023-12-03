@@ -4,6 +4,12 @@
   (:use :cl)
   (:nicknames :ezmq)
   (:export
+   :encode
+   :decode
+   :handler-encode
+   :handler-decode
+   :defencoding)
+  (:export
    :server-auth-config
    :client-auth-config
    :make-server-auth
